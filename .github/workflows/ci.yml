@@ -1,0 +1,43 @@
+# GitHub Actions workflow for Vesper OS Kernel v1.0.0
+name: 🌌 Vesper OS CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [x86_64, i686, aarch64, riscv64gc]
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    
+    - name: 🦉 Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        components: rustfmt, clippy
+    
+    - name: 🔧 Install NASM
+      run: sudo apt-get update && sudo apt-get install -y nasm
+    
+    - name: 🚀 Build Vesper OS Kernel
+      run: |
+        mkdir -p target/${arch}
+        TARGET=${arch}-unknown-vesperos make BUILD=target/${arch}
+    
+    - name: 📝 Check formatting
+      run: cargo fmt --check
+    
+    - name: 🔍 Run clippy
+      run: cargo clippy --all-targets -- -D warnings
+    
+    - name: 🧪 Run tests
+      run: TARGET=x86_64-unknown-vesperos cargo test
