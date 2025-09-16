@@ -303,7 +303,7 @@ pub unsafe extern "C" fn kstart_ap(args_ptr: *const KernelArgsAp) -> ! { unsafe 
         crate::misc::init(cpu_id);
 
         // Initialize devices (for AP)
-        unsafe { device::init_ap(); }
+        device::init_ap();
 
         AP_READY.store(true, Ordering::SeqCst);
 
