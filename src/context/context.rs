@@ -323,7 +323,7 @@ impl Context {
         &mut self,
         addr_space: Option<Arc<AddrSpaceWrapper>>,
     ) -> Option<Arc<AddrSpaceWrapper>> {
-        if let (Some(ref old), Some(ref new)) = (&self.addr_space, &addr_space)
+        if let (Some(old), Some(new)) = (&self.addr_space, &addr_space)
             && Arc::ptr_eq(old, new)
         {
             return addr_space;

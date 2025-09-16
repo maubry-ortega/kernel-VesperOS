@@ -32,12 +32,14 @@ unsafe fn map_linearly(addr: PhysicalAddress, len: usize, mapper: &mut crate::pa
     let aligned_len = crate::paging::round_up_pages(len + (addr.data() - base.data()));
 
     for page_idx in 0..aligned_len / crate::memory::PAGE_SIZE {
-        let (_, flush) = mapper
-            .map_linearly(
-                base.add(page_idx * crate::memory::PAGE_SIZE),
-                PageFlags::new(),
-            )
-            .expect("failed to linearly map SDT");
+        let (_, flush) = unsafe {
+            mapper
+                .map_linearly(
+                    base.add(page_idx * crate::memory::PAGE_SIZE),
+                    PageFlags::new(),
+                )
+                .expect("failed to linearly map SDT")
+        };
         flush.flush();
     }
 }

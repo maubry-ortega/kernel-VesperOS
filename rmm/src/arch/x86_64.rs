@@ -32,9 +32,7 @@ impl Arch for X8664Arch {
 
     #[inline(always)]
     unsafe fn invalidate(address: VirtualAddress) {
-        unsafe {
-            asm!("invlpg [{0}]", in(reg) address.data());
-        }
+        asm!("invlpg [{0}]", in(reg) address.data());
     }
 
     #[inline(always)]

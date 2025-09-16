@@ -44,8 +44,8 @@ pub unsafe fn init() {
     let size = crate::KERNEL_HEAP_SIZE;
 
     // Map heap pages
-    map_heap(&mut KernelMapper::lock(), offset, size);
+    unsafe { map_heap(&mut KernelMapper::lock(), offset, size); }
 
     // Initialize global heap
-    Allocator::init(offset, size);
+    unsafe { Allocator::init(offset, size); }
 }

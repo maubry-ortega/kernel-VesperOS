@@ -955,9 +955,7 @@ impl UserInner {
                     .get_mut(tag as usize)
                     .ok_or(Error::new(EINVAL))?
                 {
-                    State::Waiting { fds, .. } => {
-                        fds.take().ok_or(Error::new(ENOENT))?.remove(0)
-                    }
+                    State::Waiting { fds, .. } => fds.take().ok_or(Error::new(ENOENT))?.remove(0),
                     _ => return Err(Error::new(ENOENT)),
                 };
 

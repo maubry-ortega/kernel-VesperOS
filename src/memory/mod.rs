@@ -230,7 +230,7 @@ pub unsafe fn deallocate_p2frame(orig_frame: Frame, order: u32) {
 }
 
 pub unsafe fn deallocate_frame(frame: Frame) {
-    deallocate_p2frame(frame, 0)
+    unsafe { deallocate_p2frame(frame, 0) }
 }
 
 // Helper function for quickly mapping device memory

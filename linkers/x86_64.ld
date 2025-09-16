@@ -24,7 +24,7 @@ SECTIONS {
         __text_start = .;
         *(.text*)
         __usercopy_start = .;
-        *(.usercopy-fns)
+        *(.usercopy_fns)
         __usercopy_end = .;
     }
 

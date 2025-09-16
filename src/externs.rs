@@ -28,15 +28,19 @@ pub unsafe extern "C" fn memcpy(dest: *mut u8, src: *const u8, len: usize) -> *m
     let chunks = len / WORD_SIZE;
 
     while i < chunks * WORD_SIZE {
-        dest.add(i)
-            .cast::<usize>()
-            .write_unaligned(src.add(i).cast::<usize>().read_unaligned());
+        unsafe {
+            dest.add(i)
+                .cast::<usize>()
+                .write_unaligned(src.add(i).cast::<usize>().read_unaligned());
+        }
         i += WORD_SIZE;
     }
 
     // .. then we copy len % WORD_SIZE bytes
     while i < len {
-        dest.add(i).write(src.add(i).read());
+        unsafe {
+            dest.add(i).write(src.add(i).read());
+        }
         i += 1;
     }
 
@@ -61,15 +65,19 @@ pub unsafe extern "C" fn memmove(dest: *mut u8, src: *const u8, len: usize) -> *
 
         while i != chunks * WORD_SIZE {
             i -= 1;
-            dest.add(i).write(src.add(i).read());
+            unsafe {
+                dest.add(i).write(src.add(i).read());
+            }
         }
 
         while i > 0 {
             i -= WORD_SIZE;
 
-            dest.add(i)
-                .cast::<usize>()
-                .write_unaligned(src.add(i).cast::<usize>().read_unaligned());
+            unsafe {
+                dest.add(i)
+                    .cast::<usize>()
+                    .write_unaligned(src.add(i).cast::<usize>().read_unaligned());
+            }
         }
     } else {
         // We have to copy forward if copying downwards.
@@ -77,15 +85,19 @@ pub unsafe extern "C" fn memmove(dest: *mut u8, src: *const u8, len: usize) -> *
         let mut i = 0_usize;
 
         while i < chunks * WORD_SIZE {
-            dest.add(i)
-                .cast::<usize>()
-                .write_unaligned(src.add(i).cast::<usize>().read_unaligned());
+            unsafe {
+                dest.add(i)
+                    .cast::<usize>()
+                    .write_unaligned(src.add(i).cast::<usize>().read_unaligned());
+            }
 
             i += WORD_SIZE;
         }
 
         while i < len {
-            dest.add(i).write(src.add(i).read());
+            unsafe {
+                dest.add(i).write(src.add(i).read());
+            }
             i += 1;
         }
     }
@@ -109,12 +121,16 @@ pub unsafe extern "C" fn memset(dest: *mut u8, byte: i32, len: usize) -> *mut u8
     let chunks = len / WORD_SIZE;
 
     while i < chunks * WORD_SIZE {
-        dest.add(i).cast::<usize>().write_unaligned(broadcasted);
+        unsafe {
+            dest.add(i).cast::<usize>().write_unaligned(broadcasted);
+        }
         i += WORD_SIZE;
     }
 
     while i < len {
-        dest.add(i).write(byte);
+        unsafe {
+            dest.add(i).write(byte);
+        }
         i += 1;
     }
 
@@ -135,8 +151,8 @@ pub unsafe extern "C" fn memcmp(s1: *const u8, s2: *const u8, len: usize) -> i32
     let chunks = len / WORD_SIZE;
 
     while i < chunks * WORD_SIZE {
-        let a = s1.add(i).cast::<usize>().read_unaligned();
-        let b = s2.add(i).cast::<usize>().read_unaligned();
+        let a = unsafe { s1.add(i).cast::<usize>().read_unaligned() };
+        let b = unsafe { s2.add(i).cast::<usize>().read_unaligned() };
 
         if a != b {
             // x86 has had bswap since the 80486, and the compiler will likely use the faster
@@ -151,8 +167,8 @@ pub unsafe extern "C" fn memcmp(s1: *const u8, s2: *const u8, len: usize) -> i32
 
     // ... and then compare bytes.
     while i < len {
-        let a = s1.add(i).read();
-        let b = s2.add(i).read();
+        let a = unsafe { s1.add(i).read() };
+        let b = unsafe { s2.add(i).read() };
 
         if a != b {
             return i32::from(a) - i32::from(b);

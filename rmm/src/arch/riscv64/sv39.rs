@@ -34,12 +34,16 @@ impl Arch for RiscV64Sv39Arch {
 
     #[inline(always)]
     unsafe fn invalidate(address: VirtualAddress) {
-        asm!("sfence.vma {}", in(reg) address.data());
+        unsafe {
+            asm!("sfence.vma {}", in(reg) address.data());
+        }
     }
 
     #[inline(always)]
     unsafe fn invalidate_all() {
-        asm!("sfence.vma");
+        unsafe {
+            asm!("sfence.vma");
+        }
     }
 
     #[inline(always)]

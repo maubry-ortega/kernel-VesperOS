@@ -1,7 +1,7 @@
 //! # Vesper OS Kernel v1.0.0
 //!
 //! 🌌 **Vesper OS** - Un sistema operativo experimental escrito en Rust
-//! 
+//!
 //! Vesper OS está diseñado para ser portable, ligero y persistente, con la capacidad
 //! de ejecutar aplicaciones en formato WebAssembly (.wasm).
 //!
@@ -132,11 +132,10 @@ use ::log::info;
 use alloc::sync::Arc;
 use spinning_top::RwSpinlock;
 
-
 /// Muestra el banner de Vesper OS con Nox
 fn show_vesper_banner() {
     use crate::nox_logo::{get_nox_logo, NoxContext};
-    
+
     println!("{}", get_nox_logo(NoxContext::Main));
     println!("🚀 Iniciando Vesper OS Kernel v1.0.0...");
     println!("🦉 Nox está vigilando el sistema...");

@@ -1,5 +1,5 @@
 //! 🦉 Nox Logo - El búho minimalista de Vesper OS
-//! 
+//!
 //! Este módulo contiene diferentes variaciones del logo ASCII de Nox,
 //! el búho minimalista que representa la sabiduría nocturna de Vesper OS.
 

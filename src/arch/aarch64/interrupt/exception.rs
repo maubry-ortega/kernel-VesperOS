@@ -65,19 +65,25 @@ unsafe fn instr_data_abort_inner(
 
 unsafe fn cntfrq_el0() -> usize {
     let ret: usize;
-    core::arch::asm!("mrs {}, cntfrq_el0", out(reg) ret);
+    unsafe {
+        core::arch::asm!("mrs {}, cntfrq_el0", out(reg) ret);
+    }
     ret
 }
 
 unsafe fn cntpct_el0() -> usize {
     let ret: usize;
-    core::arch::asm!("mrs {}, cntpct_el0", out(reg) ret);
+    unsafe {
+        core::arch::asm!("mrs {}, cntpct_el0", out(reg) ret);
+    }
     ret
 }
 
 unsafe fn cntvct_el0() -> usize {
     let ret: usize;
-    core::arch::asm!("mrs {}, cntvct_el0", out(reg) ret);
+    unsafe {
+        core::arch::asm!("mrs {}, cntvct_el0", out(reg) ret);
+    }
     ret
 }
 

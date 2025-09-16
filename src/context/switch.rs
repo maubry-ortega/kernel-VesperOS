@@ -17,7 +17,7 @@ use crate::{
     cpu_set::LogicalCpuId,
     interrupt,
     percpu::PercpuBlock,
-    ptrace, time,
+    time,
 };
 
 #[cfg(feature = "sys_stat")]
@@ -65,7 +65,7 @@ unsafe fn update_runnable(context: &mut Context, cpu_id: LogicalCpuId) -> Update
             let current = time::monotonic();
             if current >= wake {
                 context.wake = None;
-                context.unblock_no_ipi();
+                unsafe { context.unblock_no_ipi() };
             }
         }
     }

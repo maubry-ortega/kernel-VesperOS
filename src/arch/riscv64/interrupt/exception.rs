@@ -88,13 +88,15 @@ global_asm!(concat!(
 unsafe fn exception_handler_inner(regs: &mut InterruptStack) {
     let scause: usize;
     let sstatus: usize;
-    core::arch::asm!(
-        "csrr t0, scause",
-        "csrr t1, sstatus",
-        lateout("t0") scause,
-        lateout("t1") sstatus,
-        options(nostack)
-    );
+    unsafe {
+        core::arch::asm!(
+            "csrr t0, scause",
+            "csrr t1, sstatus",
+            lateout("t0") scause,
+            lateout("t1") sstatus,
+            options(nostack)
+        );
+    }
 
     //log::info!("Exception handler incoming: sepc={:x} scause={:x} sstatus={:x}", regs.iret.sepc, scause, sstatus);
 
@@ -114,13 +116,15 @@ unsafe fn exception_handler_inner(regs: &mut InterruptStack) {
 unsafe fn handle_system_exception(scause: usize, regs: &InterruptStack) {
     let stval: usize;
     let tp: usize;
-    core::arch::asm!(
-        "csrr t0, stval",
-        "mv t1, tp",
-        lateout("t0") stval,
-        lateout("t1") tp,
-        options(nostack)
-    );
+    unsafe {
+        core::arch::asm!(
+            "csrr t0, stval",
+            "mv t1, tp",
+            lateout("t0") stval,
+            lateout("t1") tp,
+            options(nostack)
+        );
+    }
 
     error!(
         "S-mode exception! scause={:#016x}, stval={:#016x}",

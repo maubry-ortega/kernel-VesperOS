@@ -238,90 +238,55 @@ pub unsafe fn switch_to(prev: &mut super::Context, next: &mut super::Context) {
     prev.cpu_time += switch_time.saturating_sub(prev.switch_time);
     next.switch_time = switch_time;
 
-    let pcr = crate::gdt::pcr();
+    let pcr = unsafe { crate::gdt::pcr() };
 
     if let Some(ref stack) = next.kstack {
-        crate::gdt::set_tss_stack(pcr, stack.initial_top() as usize);
+        unsafe { crate::gdt::set_tss_stack(pcr, stack.initial_top() as usize) };
     }
-    crate::gdt::set_userspace_io_allowed(pcr, next.arch.userspace_io_allowed);
+    unsafe { crate::gdt::set_userspace_io_allowed(pcr, next.arch.userspace_io_allowed) };
 
-    core::arch::asm!(
-        alternative2!(
-            feature1: "xsaveopt",
-            then1: ["
-                mov eax, 0xffffffff
-                mov edx, eax
-                xsaveopt64 [{prev_fx}]
-                xrstor64 [{next_fx}]
-            "],
-            feature2: "xsave",
-            then2: ["
-                mov eax, 0xffffffff
-                mov edx, eax
-                xsave64 [{prev_fx}]
-                xrstor64 [{next_fx}]
-            "],
-            default: ["
-                fxsave64 [{prev_fx}]
-                fxrstor64 [{next_fx}]
-            "]
-        ),
-        prev_fx = in(reg) prev.kfx.as_mut_ptr(),
-        next_fx = in(reg) next.kfx.as_ptr(),
-        out("eax") _,
-        out("edx") _,
-    );
-
-    {
+    unsafe {
         core::arch::asm!(
-            alternative!(
-                feature: "fsgsbase",
-                then: ["
-                    mov rax, [{next}+{fsbase_off}]
-                    mov rcx, [{next}+{gsbase_off}]
-
-                    rdfsbase rdx
-                    wrfsbase rax
-                    swapgs
-                    rdgsbase rax
-                    wrgsbase rcx
-                    swapgs
-
-                    mov [{prev}+{fsbase_off}], rdx
-                    mov [{prev}+{gsbase_off}], rax
-                "],
-                // TODO: Most applications will set FSBASE, but won't touch GSBASE. Maybe avoid
-                // wrmsr or even the swapgs+rdgsbase+wrgsbase+swapgs sequence if they are already
-                // equal?
-                default: ["
-                    mov ecx, {MSR_FSBASE}
-                    mov rdx, [{next}+{fsbase_off}]
-                    mov eax, edx
-                    shr rdx, 32
-                    wrmsr
-
-                    mov ecx, {MSR_KERNEL_GSBASE}
-                    mov rdx, [{next}+{gsbase_off}]
-                    mov eax, edx
-                    shr rdx, 32
-                    wrmsr
-
-                    // {prev}
-                "]
+            alternative2!(
+                feature1: "xsaveopt",
+                then1: ["mov eax, 0xffffffff\n", "mov edx, eax\n", "xsaveopt64 [{prev_fx}]\n", "xrstor64 [{next_fx}]\n"],
+                feature2: "xsave",
+                then2: ["mov eax, 0xffffffff\n", "mov edx, eax\n", "xsave64 [{prev_fx}]\n", "xrstor64 [{next_fx}]\n"],
+                default: ["fxsave64 [{prev_fx}]\n", "fxrstor64 [{next_fx}]\n"]
             ),
-            out("rax") _,
-            out("rdx") _,
-            out("ecx") _, prev = in(reg) addr_of_mut!(prev.arch), next = in(reg) addr_of!(next.arch),
-            MSR_FSBASE = const msr::IA32_FS_BASE,
-            MSR_KERNEL_GSBASE = const msr::IA32_KERNEL_GSBASE,
-            gsbase_off = const offset_of!(Context, gsbase),
-            fsbase_off = const offset_of!(Context, fsbase),
+            prev_fx = in(reg) prev.kfx.as_mut_ptr(),
+            next_fx = in(reg) next.kfx.as_ptr(),
+            out("eax") _,
+            out("edx") _,
         );
     }
 
-    (*pcr).percpu.new_addrsp_tmp.set(next.addr_space.clone());
+    {
+        unsafe {
+            core::arch::asm!(
+                alternative!(
+                    feature: "fsgsbase",
+                    then: ["mov rax, [{next}+{fsbase_off}]\n", "mov rcx, [{next}+{gsbase_off}]\n", "rdfsbase rdx\n", "wrfsbase rax\n", "swapgs\n", "rdgsbase rax\n", "wrgsbase rcx\n", "swapgs\n", "mov [{prev}+{fsbase_off}], rdx\n", "mov [{prev}+{gsbase_off}], rax\n"],
+                    // TODO: Most applications will set FSBASE, but won't touch GSBASE. Maybe avoid
+                    // wrmsr or even the swapgs+rdgsbase+wrgsbase+swapgs sequence if they are already
+                    // equal?
+                    default: ["mov ecx, {MSR_FSBASE}\n", "mov rdx, [{next}+{fsbase_off}]\n", "mov eax, edx\n", "shr rdx, 32\n", "wrmsr\n", "mov ecx, {MSR_KERNEL_GSBASE}\n", "mov rdx, [{next}+{gsbase_off}]\n", "mov eax, edx\n", "shr rdx, 32\n", "wrmsr\n"]
+                ),
+                out("rax") _,
+                out("rdx") _,
+                out("ecx") _, prev = in(reg) addr_of_mut!(prev.arch), next = in(reg) addr_of!(next.arch),
+                MSR_FSBASE = const msr::IA32_FS_BASE,
+                MSR_KERNEL_GSBASE = const msr::IA32_KERNEL_GSBASE,
+                gsbase_off = const offset_of!(Context, gsbase),
+                fsbase_off = const offset_of!(Context, fsbase),
+            );
+        }
+    }
 
-    switch_to_inner(&mut prev.arch, &mut next.arch)
+    unsafe {
+        (*pcr).percpu.new_addrsp_tmp.set(next.addr_space.clone());
+        switch_to_inner(&mut prev.arch, &mut next.arch)
+    }
 }
 
 // Check disassembly!
@@ -336,50 +301,32 @@ unsafe extern "sysv64" fn switch_to_inner(_prev: &mut Context, _next: &mut Conte
         // - we can modify scratch registers, e.g. rax
         // - we cannot change callee-preserved registers arbitrarily, e.g. rbx, which is why we
         //   store them here in the first place.
-        concat!("
-        // Save old registers, and load new ones
-        mov [rdi + {off_rbx}], rbx
-        mov rbx, [rsi + {off_rbx}]
-
-        mov [rdi + {off_r12}], r12
-        mov r12, [rsi + {off_r12}]
-
-        mov [rdi + {off_r13}], r13
-        mov r13, [rsi + {off_r13}]
-
-        mov [rdi + {off_r14}], r14
-        mov r14, [rsi + {off_r14}]
-
-        mov [rdi + {off_r15}], r15
-        mov r15, [rsi + {off_r15}]
-
-        mov [rdi + {off_rbp}], rbp
-        mov rbp, [rsi + {off_rbp}]
-
-        mov [rdi + {off_rsp}], rsp
-        mov rsp, [rsi + {off_rsp}]
-
+        "mov [rdi + {off_rbx}], rbx",
+        "mov rbx, [rsi + {off_rbx}]",
+        "mov [rdi + {off_r12}], r12",
+        "mov r12, [rsi + {off_r12}]",
+        "mov [rdi + {off_r13}], r13",
+        "mov r13, [rsi + {off_r13}]",
+        "mov [rdi + {off_r14}], r14",
+        "mov r14, [rsi + {off_r14}]",
+        "mov [rdi + {off_r15}], r15",
+        "mov r15, [rsi + {off_r15}]",
+        "mov [rdi + {off_rbp}], rbp",
+        "mov rbp, [rsi + {off_rbp}]",
+        "mov [rdi + {off_rsp}], rsp",
+        "mov rsp, [rsi + {off_rsp}]",
         // push RFLAGS (can only be modified via stack)
-        pushfq
+        "pushfq",
         // pop RFLAGS into `self.rflags`
-        pop QWORD PTR [rdi + {off_rflags}]
-
+        "pop QWORD PTR [rdi + {off_rflags}]",
         // push `next.rflags`
-        push QWORD PTR [rsi + {off_rflags}]
+        "push QWORD PTR [rsi + {off_rflags}]",
         // pop into RFLAGS
-        popfq
-
-        // When we return, we cannot even guarantee that the return address on the stack, points to
-        // the calling function, `context::switch`. Thus, we have to execute this Rust hook by
-        // ourselves, which will unlock the contexts before the later switch.
-
+        "popfq",
         // Note that switch_finish_hook will be responsible for executing `ret`.
-        jmp {switch_hook}
-
-        "),
+        "jmp {switch_hook}",
 
         off_rflags = const(offset_of!(Cx, rflags)),
-
         off_rbx = const(offset_of!(Cx, rbx)),
         off_r12 = const(offset_of!(Cx, r12)),
         off_r13 = const(offset_of!(Cx, r13)),
@@ -387,7 +334,6 @@ unsafe extern "sysv64" fn switch_to_inner(_prev: &mut Context, _next: &mut Conte
         off_r15 = const(offset_of!(Cx, r15)),
         off_rbp = const(offset_of!(Cx, rbp)),
         off_rsp = const(offset_of!(Cx, rsp)),
-
         switch_hook = sym crate::context::switch_finish_hook,
     );
 }

@@ -42,7 +42,7 @@ pub unsafe fn debugger(target_id: Option<crate::context::ContextId>) {
                 TableKind::User,
                 space.acquire_read().table.utable.table().phys(),
             );
-            check_consistency(&mut *space.acquire_write(), new_as, &mut tree);
+            unsafe { check_consistency(&mut *space.acquire_write(), new_as, &mut tree) };
 
             if let Some([a, b, c, d, e, f]) = context.current_syscall() {
                 println!(
@@ -83,8 +83,10 @@ pub unsafe fn debugger(target_id: Option<crate::context::ContextId>) {
                             .translate(crate::paging::VirtualAddress::new(sp))
                             .is_some()
                     }) {
-                        let value = *(sp as *const usize);
-                        println!("    {:>016x}: {:>016x}", sp, value);
+                        unsafe {
+                            let value = *(sp as *const usize);
+                            println!("    {:>016x}: {:>016x}", sp, value);
+                        }
                         if let Some(next_sp) = sp.checked_add(core::mem::size_of::<usize>()) {
                             sp = next_sp;
                         } else {
@@ -104,8 +106,8 @@ pub unsafe fn debugger(target_id: Option<crate::context::ContextId>) {
 
         println!();
     }
-    for (frame, (count, p)) in tree {
-        let rc = get_page_info(frame).unwrap().refcount();
+    for (frame, (count, _p)) in tree {
+        let rc = unsafe { get_page_info(frame).unwrap().refcount() };
         let c = match rc {
             RefCount::Zero => 0,
             RefCount::One => 1,
@@ -185,8 +187,10 @@ pub unsafe fn debugger(target_id: Option<crate::context::ContextId>) {
                         .translate(crate::paging::VirtualAddress::new(sp))
                         .is_some()
                 }) {
-                    let value = *(sp as *const usize);
-                    println!("    {:>08x}: {:>08x}", sp, value);
+                    unsafe {
+                        let value = *(sp as *const usize);
+                        println!("    {:>08x}: {:>08x}", sp, value);
+                    }
                     if let Some(next_sp) = sp.checked_add(core::mem::size_of::<usize>()) {
                         sp = next_sp;
                     } else {
@@ -305,8 +309,10 @@ pub unsafe fn debugger(target_id: Option<*const RwSpinlock<Context>>) {
                         .translate(crate::paging::VirtualAddress::new(rsp))
                         .is_some()
                 }) {
-                    let value = *(rsp as *const usize);
-                    println!("    {:>016x}: {:>016x}", rsp, value);
+                    unsafe {
+                        let value = *(rsp as *const usize);
+                        println!("    {:>016x}: {:>016x}", rsp, value);
+                    }
                     if let Some(next_rsp) = rsp.checked_add(core::mem::size_of::<usize>()) {
                         rsp = next_rsp;
                     } else {
@@ -330,8 +336,7 @@ pub unsafe fn debugger(target_id: Option<*const RwSpinlock<Context>>) {
         check_consistency(&mut *addrsp.acquire_write(), was_new, &mut tree);
     });
     for (frame, (count, p)) in tree {
-        let Some(info) = get_page_info(frame) else {
-            assert!(p);
+        let Some(info) = (unsafe { get_page_info(frame) }) else {
             continue;
         };
         let rc = info.refcount();

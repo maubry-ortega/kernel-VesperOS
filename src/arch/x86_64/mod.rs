@@ -30,7 +30,7 @@ pub mod flags {
 // TODO: Maybe support rewriting relocations (using LD's --emit-relocs) when working with entire
 // functions?
 #[unsafe(naked)]
-#[unsafe(link_section = ".usercopy-fns")]
+#[unsafe(link_section = ".usercopy_fns")]
 pub unsafe extern "C" fn arch_copy_to_user(dst: usize, src: usize, len: usize) -> u8 {
     // TODO: spectre_v1
 

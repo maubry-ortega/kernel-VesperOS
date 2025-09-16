@@ -28,7 +28,7 @@ SECTIONS {
 	. = ALIGN(4096);
         *(.text*)
         __usercopy_start = .;
-        *(.usercopy-fns)
+        *(.usercopy_fns)
         __usercopy_end = .;
 	. = ALIGN(4096);
         __text_end = .;

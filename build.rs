@@ -1,4 +1,3 @@
-use rustc_cfg::Cfg;
 use std::{env, path::Path, process::Command};
 use toml::Table;
 
@@ -9,11 +8,12 @@ fn parse_kconfig(arch: &str) -> Option<()> {
     if !Path::new("config.toml").try_exists().unwrap() {
         std::fs::copy("config.toml.example", "config.toml").unwrap();
     }
+
     let config_str = std::fs::read_to_string("config.toml").unwrap();
     let root: Table = toml::from_str(&config_str).unwrap();
 
     let altfeatures = root
-        .get("arch")? 
+        .get("arch")?
         .as_table()
         .unwrap()
         .get(arch)?
@@ -43,8 +43,8 @@ fn main() {
     println!("cargo:rustc-env=TARGET={}", env::var("TARGET").unwrap());
 
     let out_dir = env::var("OUT_DIR").unwrap();
-    let cfg = Cfg::of(env::var("TARGET").unwrap().as_str()).unwrap();
-    let arch_str = cfg.target_arch.as_str();
+    let target = env::var("TARGET").unwrap();
+    let arch_str = target.split('-').next().unwrap();
 
     let nasm_path = if cfg!(windows) {
         "nasm/nasm-2.16.03/nasm.exe"
@@ -73,6 +73,8 @@ fn main() {
         }
         "x86_64" => {
             println!("cargo:rerun-if-changed=src/asm/x86_64/trampoline.asm");
+
+            println!("cargo:rustc-link-arg=-Tlinkers/x86_64.ld");
 
             let status = Command::new(nasm_path)
                 .arg("-f")

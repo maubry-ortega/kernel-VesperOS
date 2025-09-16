@@ -55,11 +55,13 @@ impl Display {
                 let src_offset = src_y * self.stride + x;
                 let dst_offset = y * self.stride + x;
 
-                ptr::copy(
-                    offscreen.as_ptr().add(src_offset),
-                    self.onscreen_ptr.add(dst_offset),
-                    w,
-                );
+                unsafe {
+                    ptr::copy(
+                        offscreen.as_ptr().add(src_offset),
+                        self.onscreen_ptr.add(dst_offset),
+                        w,
+                    );
+                }
 
                 y += 1;
                 h -= 1;
@@ -74,16 +76,18 @@ impl Display {
             let first_part_len = (self.height - self.offset_y) * stride_bytes;
             let second_part_len = self.offset_y * stride_bytes;
 
-            ptr::copy(
-                offscreen.as_ptr().add(self.offset_y * stride_bytes),
-                self.onscreen_ptr,
-                first_part_len,
-            );
-            ptr::copy(
-                offscreen.as_ptr(),
-                self.onscreen_ptr.add(first_part_len),
-                second_part_len,
-            );
+            unsafe {
+                ptr::copy(
+                    offscreen.as_ptr().add(self.offset_y * stride_bytes),
+                    self.onscreen_ptr,
+                    first_part_len,
+                );
+                ptr::copy(
+                    offscreen.as_ptr(),
+                    self.onscreen_ptr.add(first_part_len),
+                    second_part_len,
+                );
+            }
         }
     }
 }

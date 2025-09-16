@@ -106,9 +106,11 @@ pub fn futex(addr: usize, op: usize, val: usize, val2: usize, _addr2: usize) -> 
                         unsafe { crate::paging::RmmA::phys_to_virt(target_physaddr) }.data();
 
                     (
-                        u64::from(unsafe {
-                            (*(accessible_addr as *const AtomicU32)).load(Ordering::SeqCst)
-                        }),
+                        unsafe {
+                            u64::from(
+                                (*(accessible_addr as *const AtomicU32)).load(Ordering::SeqCst),
+                            )
+                        },
                         u64::from(val as u32),
                     )
                 } else {
@@ -121,9 +123,9 @@ pub fn futex(addr: usize, op: usize, val: usize, val2: usize, _addr2: usize) -> 
                             return Err(Error::new(EINVAL));
                         }
                         (
-                            u64::from(unsafe {
-                                (*(addr as *const AtomicU64)).load(Ordering::SeqCst)
-                            }),
+                            unsafe {
+                                u64::from((*(addr as *const AtomicU64)).load(Ordering::SeqCst))
+                            },
                             val as u64,
                         )
                     }

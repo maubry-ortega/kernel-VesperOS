@@ -432,7 +432,7 @@ impl KernelScheme for ProcScheme {
 
         match kind {
             ContextHandle::AddrSpace { addrspace } => {
-                if Arc::ptr_eq(addrspace, dst_addr_space) {
+                if Arc::ptr_eq(&addrspace, dst_addr_space) {
                     return Err(Error::new(EBUSY));
                 }
 
@@ -465,14 +465,14 @@ impl KernelScheme for ProcScheme {
                 } else {
                     let mut dst_addrsp_guard = dst_addr_space.acquire_write();
                     dst_addrsp_guard.mmap(
-                        &dst_addr_space,
+                        dst_addr_space,
                         requested_dst_base,
                         src_page_count,
                         map.flags,
                         &mut notify_files,
                         |dst_page, _, dst_mapper, flusher| {
                             Ok(Grant::borrow(
-                                Arc::clone(addrspace),
+                                Arc::clone(&addrspace),
                                 &mut *src_addr_space,
                                 src_span.base,
                                 dst_page,

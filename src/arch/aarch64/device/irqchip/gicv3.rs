@@ -173,7 +173,9 @@ impl GicV3CpuIf {
 
     unsafe fn irq_ack(&mut self) -> u32 {
         let mut irq: usize;
-        asm!("mrs {}, icc_iar1_el1", out(reg) irq);
+        unsafe {
+            asm!("mrs {}, icc_iar1_el1", out(reg) irq);
+        }
         irq &= 0x1ff;
         if irq == 1023 {
             panic!("irq_ack: got ID 1023!!!");
@@ -182,6 +184,8 @@ impl GicV3CpuIf {
     }
 
     unsafe fn irq_eoi(&mut self, irq: u32) {
-        asm!("msr icc_eoir1_el1, {}", in(reg) irq as usize);
+        unsafe {
+            asm!("msr icc_eoir1_el1, {}", in(reg) irq as usize);
+        }
     }
 }

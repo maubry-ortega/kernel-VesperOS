@@ -74,9 +74,9 @@ pub fn signal_handler() {
 pub fn excp_handler(excp: syscall::Exception) {
     let current = context::current();
 
-    let mut context = current.write();
+    let context = current.write();
 
-    let Some(eh) = context.sig.as_ref().and_then(|s| s.excp_handler) else {
+    let Some(_eh) = context.sig.as_ref().and_then(|s| s.excp_handler) else {
         // TODO: Let procmgr print this?
         log::info!(
             "UNHANDLED EXCEPTION, CPU {}, PID {}, NAME {}, CONTEXT {current:p}",

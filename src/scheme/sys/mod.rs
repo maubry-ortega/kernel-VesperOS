@@ -191,8 +191,7 @@ impl KernelScheme for SysScheme {
                 return Err(Error::new(EISDIR))
             }
             Handle::Resource {
-                data: Some(data),
-                ..
+                data: Some(data), ..
             } => {
                 let avail_buf = data.get(pos..).unwrap_or(&[]);
 

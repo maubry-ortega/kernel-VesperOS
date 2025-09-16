@@ -194,7 +194,7 @@ pub unsafe extern "C" fn kstart(args_ptr: *const KernelArgs) -> ! {
         crate::alternative::early_init(true);
 
         // Set up syscall instruction
-        interrupt::syscall::init();
+        unsafe { interrupt::syscall::init(); }
 
         // Reset AP variables
         CPU_COUNT.store(1, Ordering::SeqCst);
@@ -218,10 +218,10 @@ pub unsafe extern "C" fn kstart(args_ptr: *const KernelArgs) -> ! {
 
         // Initialize miscellaneous processor features
         #[cfg(target_arch = "x86_64")]
-        crate::misc::init(LogicalCpuId::BSP);
+        unsafe { crate::misc::init(LogicalCpuId::BSP); }
 
         // Initialize devices
-        device::init();
+        unsafe { device::init(); }
 
         // Read ACPI tables, starts APs
         #[cfg(feature = "acpi")]
@@ -303,7 +303,7 @@ pub unsafe extern "C" fn kstart_ap(args_ptr: *const KernelArgsAp) -> ! {
         crate::misc::init(cpu_id);
 
         // Initialize devices (for AP)
-        device::init_ap();
+        unsafe { device::init_ap(); }
 
         AP_READY.store(true, Ordering::SeqCst);
 

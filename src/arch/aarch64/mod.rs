@@ -40,7 +40,7 @@ pub use ::rmm::AArch64Arch as CurrentRmmArch;
 pub use arch_copy_to_user as arch_copy_from_user;
 
 #[unsafe(naked)]
-#[unsafe(link_section = ".usercopy-fns")]
+#[unsafe(link_section = ".usercopy_fns")]
 pub unsafe extern "C" fn arch_copy_to_user(dst: usize, src: usize, len: usize) -> u8 {
     // x0, x1, x2
     core::arch::naked_asm!(

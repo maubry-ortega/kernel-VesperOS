@@ -55,18 +55,9 @@ pub fn is_reserved(cpu_id: LogicalCpuId, index: u8) -> bool {
     let byte_index = index / 32;
     let bit = index % 32;
 
-    {
-        &IDTS
-            .read()
-            .as_ref()
-            .unwrap()
-            .get(&cpu_id)
-            .unwrap()
-            .reservations[usize::from(byte_index)]
-    }
-    .load(Ordering::Acquire)
-        & (1 << bit)
-        != 0
+    let idts = IDTS.read();
+    let idt = idts.as_ref().unwrap().get(&cpu_id).unwrap();
+    (idt.reservations[usize::from(byte_index)].load(Ordering::Acquire) & (1 << bit)) != 0
 }
 
 #[inline]
@@ -74,16 +65,9 @@ pub fn set_reserved(cpu_id: LogicalCpuId, index: u8, reserved: bool) {
     let byte_index = index / 32;
     let bit = index % 32;
 
-    {
-        &IDTS
-            .read()
-            .as_ref()
-            .unwrap()
-            .get(&cpu_id)
-            .unwrap()
-            .reservations[usize::from(byte_index)]
-    }
-    .fetch_or(u32::from(reserved) << bit, Ordering::AcqRel);
+    let idts = IDTS.read();
+    let idt = idts.as_ref().unwrap().get(&cpu_id).unwrap();
+    idt.reservations[usize::from(byte_index)].fetch_or(u32::from(reserved) << bit, Ordering::AcqRel);
 }
 
 pub fn available_irqs_iter(cpu_id: LogicalCpuId) -> impl Iterator<Item = u8> + 'static {

@@ -219,12 +219,16 @@ impl GicDistIf {
     }
 
     unsafe fn read(&self, reg: u32) -> u32 {
-        let val = read_volatile((self.address + reg as usize) as *const u32);
-        val
+        unsafe {
+            let val = read_volatile((self.address + reg as usize) as *const u32);
+            val
+        }
     }
 
     unsafe fn write(&mut self, reg: u32, value: u32) {
-        write_volatile((self.address + reg as usize) as *mut u32, value);
+        unsafe {
+            write_volatile((self.address + reg as usize) as *mut u32, value);
+        }
     }
 }
 
