@@ -9,15 +9,15 @@ static MASTER: SyncUnsafeCell<Pic> = SyncUnsafeCell::new(Pic::new(0x20));
 static SLAVE: SyncUnsafeCell<Pic> = SyncUnsafeCell::new(Pic::new(0xA0));
 
 // SAFETY: must be main thread
-pub unsafe fn master<'a>() -> &'a mut Pic {
+pub unsafe fn master<'a>() -> &'a mut Pic { unsafe {
     &mut *MASTER.get()
-}
+}}
 // SAFETY: must be main thread
-pub unsafe fn slave<'a>() -> &'a mut Pic {
+pub unsafe fn slave<'a>() -> &'a mut Pic { unsafe {
     &mut *SLAVE.get()
-}
+}}
 
-pub unsafe fn init() {
+pub unsafe fn init() { unsafe {
     let master = master();
     let slave = slave();
 
@@ -47,12 +47,12 @@ pub unsafe fn init() {
 
     // probably already set to PIC, but double-check
     irq::set_irq_method(irq::IrqMethod::Pic);
-}
+}}
 
-pub unsafe fn disable() {
+pub unsafe fn disable() { unsafe {
     master().data.write(0xFF);
     slave().data.write(0xFF);
-}
+}}
 
 pub struct Pic {
     cmd: Pio<u8>,

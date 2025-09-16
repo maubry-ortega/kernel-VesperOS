@@ -215,8 +215,8 @@ pub unsafe fn debugger(target_id: Option<crate::context::ContextId>) {
 
 // Super unsafe due to page table switching and raw pointers!
 #[cfg(target_arch = "x86_64")]
-pub unsafe fn debugger(target_id: Option<*const RwSpinlock<Context>>) {
-    use core::sync::atomic::Ordering;
+pub unsafe fn debugger(target_id: Option<*const RwSpinlock<Context>>) { unsafe {
+    
 
     use alloc::sync::Arc;
     use hashbrown::HashSet;
@@ -362,7 +362,7 @@ pub unsafe fn debugger(target_id: Option<*const RwSpinlock<Context>>) {
     unsafe {
         x86::bits64::rflags::clac();
     }
-}
+}}
 #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
 use {crate::memory::Frame, hashbrown::HashMap};
 
@@ -371,7 +371,7 @@ pub unsafe fn check_consistency(
     addr_space: &mut crate::context::memory::AddrSpace,
     new_as: bool,
     tree: &mut HashMap<Frame, (usize, bool)>,
-) {
+) { unsafe {
     use crate::{
         context::memory::{PageSpan, Provider},
         memory::{get_page_info, RefCount},
@@ -484,4 +484,4 @@ pub unsafe fn check_consistency(
         }
     }*/
     println!("Consistency appears correct");
-}
+}}

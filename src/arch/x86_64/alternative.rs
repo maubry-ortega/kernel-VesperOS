@@ -37,7 +37,7 @@ pub struct AltReloc {
 }
 
 #[cold]
-pub unsafe fn early_init(bsp: bool) {
+pub unsafe fn early_init(bsp: bool) { unsafe {
     let relocs_offset = crate::kernel_executable_offsets::__altrelocs_start();
     let relocs_size = crate::kernel_executable_offsets::__altrelocs_end() - relocs_offset;
 
@@ -141,10 +141,10 @@ pub unsafe fn early_init(bsp: bool) {
     }
 
     FEATURES.call_once(|| enable);
-}
+}}
 
 #[cfg(feature = "self_modifying")]
-unsafe fn overwrite(relocs: &[AltReloc], enable: KcpuFeatures) {
+unsafe fn overwrite(relocs: &[AltReloc], enable: KcpuFeatures) { unsafe {
     log::info!("self-modifying features: {:?}", enable);
 
     let mut mapper = KernelMapper::lock();
@@ -247,7 +247,7 @@ unsafe fn overwrite(relocs: &[AltReloc], enable: KcpuFeatures) {
                 .flush();
         }
     }
-}
+}}
 
 bitflags! {
     #[derive(Clone, Copy, Debug)]

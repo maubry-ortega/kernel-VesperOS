@@ -94,7 +94,7 @@ impl Rxsdt for RxsdtEnum {
 pub static RXSDT_ENUM: Once<RxsdtEnum> = Once::new();
 
 /// Parse the ACPI tables to gather CPU, interrupt, and timer information
-pub unsafe fn init(already_supplied_rsdp: Option<*const u8>) {
+pub unsafe fn init(already_supplied_rsdp: Option<*const u8>) { unsafe {
     {
         let mut sdt_ptrs = SDT_POINTERS.write();
         *sdt_ptrs = Some(HashMap::new());
@@ -173,7 +173,7 @@ pub unsafe fn init(already_supplied_rsdp: Option<*const u8>) {
     } else {
         println!("NO RSDP FOUND");
     }
-}
+}}
 
 pub type SdtSignature = (String, [u8; 6], [u8; 8]);
 pub static SDT_POINTERS: RwLock<Option<HashMap<SdtSignature, &'static Sdt>>> = RwLock::new(None);

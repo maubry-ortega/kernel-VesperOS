@@ -5,7 +5,7 @@ use crate::{
     cpuid::{cpuid, has_ext_feat},
 };
 
-pub unsafe fn init(cpu_id: LogicalCpuId) {
+pub unsafe fn init(cpu_id: LogicalCpuId) { unsafe {
     if has_ext_feat(|feat| feat.has_umip()) {
         // UMIP (UserMode Instruction Prevention) forbids userspace from calling SGDT, SIDT, SLDT,
         // SMSW and STR. KASLR is currently not implemented, but this protects against leaking
@@ -24,4 +24,4 @@ pub unsafe fn init(cpu_id: LogicalCpuId) {
     {
         x86::msr::wrmsr(x86::msr::IA32_TSC_AUX, cpu_id.get().into());
     }
-}
+}}

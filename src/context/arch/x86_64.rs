@@ -226,10 +226,10 @@ impl super::Context {
 pub static EMPTY_CR3: Once<rmm::PhysicalAddress> = Once::new();
 
 // SAFETY: EMPTY_CR3 must be initialized.
-pub unsafe fn empty_cr3() -> rmm::PhysicalAddress {
+pub unsafe fn empty_cr3() -> rmm::PhysicalAddress { unsafe {
     debug_assert!(EMPTY_CR3.poll().is_some());
     *EMPTY_CR3.get_unchecked()
-}
+}}
 
 /// Switch to the next context by restoring its stack and registers
 pub unsafe fn switch_to(prev: &mut super::Context, next: &mut super::Context) {

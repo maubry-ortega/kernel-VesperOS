@@ -10,7 +10,7 @@ use x86::{
     segmentation::SegmentSelector,
 };
 
-pub unsafe fn init() {
+pub unsafe fn init() { unsafe {
     // IA32_STAR[31:0] are reserved.
 
     // The base selector of the two consecutive segments for kernel code and the immediately
@@ -58,10 +58,10 @@ pub unsafe fn init() {
 
     let efer = msr::rdmsr(msr::IA32_EFER);
     msr::wrmsr(msr::IA32_EFER, efer | 1);
-}
+}}
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn __inner_syscall_instruction(stack: *mut InterruptStack) {
+pub unsafe extern "C" fn __inner_syscall_instruction(stack: *mut InterruptStack) { unsafe {
     let allowed = ptrace::breakpoint_callback(PTRACE_STOP_PRE_SYSCALL, None)
         .and_then(|_| ptrace::next_breakpoint().map(|f| !f.contains(PTRACE_FLAG_IGNORE)));
 
@@ -80,7 +80,7 @@ pub unsafe extern "C" fn __inner_syscall_instruction(stack: *mut InterruptStack)
     }
 
     ptrace::breakpoint_callback(PTRACE_STOP_POST_SYSCALL, None);
-}
+}}
 
 #[unsafe(naked)]
 #[allow(named_asm_labels)]

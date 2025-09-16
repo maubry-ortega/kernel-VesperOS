@@ -137,9 +137,9 @@ pub unsafe fn usermode_bootstrap(bootstrap: &Bootstrap) {
     }
 }
 
-pub unsafe fn bootstrap_mem(bootstrap: &crate::Bootstrap) -> &'static [u8] {
+pub unsafe fn bootstrap_mem(bootstrap: &crate::Bootstrap) -> &'static [u8] { unsafe {
     core::slice::from_raw_parts(
         CurrentRmmArch::phys_to_virt(bootstrap.base.base()).data() as *const u8,
         bootstrap.page_count * PAGE_SIZE,
     )
-}
+}}

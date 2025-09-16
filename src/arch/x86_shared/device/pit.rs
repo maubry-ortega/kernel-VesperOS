@@ -8,13 +8,13 @@ static CHAN0: SyncUnsafeCell<Pio<u8>> = SyncUnsafeCell::new(Pio::new(0x40));
 static COMMAND: SyncUnsafeCell<Pio<u8>> = SyncUnsafeCell::new(Pio::new(0x43));
 
 // SAFETY: must be externally syncd
-pub unsafe fn chan0<'a>() -> &'a mut Pio<u8> {
+pub unsafe fn chan0<'a>() -> &'a mut Pio<u8> { unsafe {
     &mut *CHAN0.get()
-}
+}}
 // SAFETY: must be externally syncd
-pub unsafe fn command<'a>() -> &'a mut Pio<u8> {
+pub unsafe fn command<'a>() -> &'a mut Pio<u8> { unsafe {
     &mut *COMMAND.get()
-}
+}}
 
 const SELECT_CHAN0: u8 = 0b00 << 6;
 const ACCESS_LATCH: u8 = 0b00 << 4;
@@ -30,17 +30,17 @@ pub const CHAN0_DIVISOR: u16 = 4847;
 // Calculated interrupt period in nanoseconds based on divisor and period
 pub const RATE: u128 = (CHAN0_DIVISOR as u128 * PERIOD_FS) / 1_000_000;
 
-pub unsafe fn init() {
+pub unsafe fn init() { unsafe {
     command().write(SELECT_CHAN0 | ACCESS_LOHI | MODE_2);
     chan0().write(CHAN0_DIVISOR as u8);
     chan0().write((CHAN0_DIVISOR >> 8) as u8);
-}
+}}
 
-pub unsafe fn read() -> u16 {
+pub unsafe fn read() -> u16 { unsafe {
     command().write(SELECT_CHAN0 | ACCESS_LATCH);
     let low = chan0().read();
     let high = chan0().read();
     let counter = ((high as u16) << 8) | (low as u16);
     // Counter is inverted, subtract from CHAN0_DIVISOR
     CHAN0_DIVISOR.saturating_sub(counter)
-}
+}}

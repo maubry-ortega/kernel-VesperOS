@@ -15,20 +15,20 @@ pub mod system76_ec;
 #[cfg(feature = "x86_kvm_pv")]
 pub mod tsc;
 
-pub unsafe fn init() {
+pub unsafe fn init() { unsafe {
     pic::init();
     local_apic::init(&mut KernelMapper::lock());
 
     // Run here for the side-effect of printing if KVM was used to avoid interleaved logs.
     tsc::get_kvm_support();
-}
+}}
 pub unsafe fn init_after_acpi() {
     // this will disable the IOAPIC if needed.
     //ioapic::init(mapper);
 }
 
 #[cfg(feature = "acpi")]
-unsafe fn init_hpet() -> bool {
+unsafe fn init_hpet() -> bool { unsafe {
     use crate::acpi::ACPI_TABLE;
     if let Some(ref mut hpet) = *ACPI_TABLE.hpet.write() {
         if cfg!(target_arch = "x86") {
@@ -40,14 +40,14 @@ unsafe fn init_hpet() -> bool {
     } else {
         false
     }
-}
+}}
 
 #[cfg(not(feature = "acpi"))]
 unsafe fn init_hpet() -> bool {
     false
 }
 
-pub unsafe fn init_noncore() {
+pub unsafe fn init_noncore() { unsafe {
     log::info!("Initializing system timer");
 
     #[cfg(feature = "x86_kvm_pv")]
@@ -65,14 +65,14 @@ pub unsafe fn init_noncore() {
     log::info!("Initializing serial");
     serial::init();
     log::info!("Finished initializing devices");
-}
+}}
 
-pub unsafe fn init_ap() {
+pub unsafe fn init_ap() { unsafe {
     local_apic::init_ap();
 
     #[cfg(feature = "x86_kvm_pv")]
     tsc::init();
-}
+}}
 
 #[derive(Default)]
 pub struct ArchPercpuMisc {

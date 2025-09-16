@@ -58,7 +58,7 @@ fn rust_begin_unwind(info: &PanicInfo) -> ! {
 
 /// Get a stack trace
 #[inline(never)]
-pub unsafe fn stack_trace() {
+pub unsafe fn stack_trace() { unsafe {
     let mapper = KernelMapper::lock();
 
     let mut frame = StackTrace::start();
@@ -92,12 +92,12 @@ pub unsafe fn stack_trace() {
             break;
         }
     }
-}
+}}
 ///
 /// Get a symbol
 //TODO: Do not create Elf object for every symbol lookup
 #[inline(never)]
-pub unsafe fn symbol_trace(addr: usize) {
+pub unsafe fn symbol_trace(addr: usize) { unsafe {
     let kernel_ptr = crate::KERNEL_OFFSET as *const u8;
     let kernel_slice = slice::from_raw_parts(kernel_ptr, KERNEL_SIZE.load(Ordering::SeqCst));
 
@@ -144,4 +144,4 @@ pub unsafe fn symbol_trace(addr: usize) {
             }
         }
     }
-}
+}}

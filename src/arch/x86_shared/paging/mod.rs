@@ -31,7 +31,7 @@ pub const PAGE_MASK: usize = RmmA::PAGE_OFFSET_MASK;
 
 /// Setup page attribute table
 #[cold]
-unsafe fn init_pat() {
+unsafe fn init_pat() { unsafe {
     let uncacheable = 0;
     let write_combining = 1;
     let write_through = 4;
@@ -60,13 +60,13 @@ unsafe fn init_pat() {
             | pat1 << 8
             | pat0,
     );
-}
+}}
 
 /// Initialize PAT
 #[cold]
-pub unsafe fn init() {
+pub unsafe fn init() { unsafe {
     init_pat();
-}
+}}
 
 /// Page
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]

@@ -66,7 +66,7 @@ pub struct KernelArgs {
 
 /// The entry to Rust, all things must be initialized
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn kstart(args_ptr: *const KernelArgs) -> ! {
+pub unsafe extern "C" fn kstart(args_ptr: *const KernelArgs) -> ! { unsafe {
     let bootstrap = {
         let args = args_ptr.read();
 
@@ -249,7 +249,7 @@ pub unsafe extern "C" fn kstart(args_ptr: *const KernelArgs) -> ! {
     };
 
     crate::kmain(CPU_COUNT.load(Ordering::SeqCst), bootstrap);
-}
+}}
 
 #[repr(C, packed)]
 pub struct KernelArgsAp {
@@ -262,7 +262,7 @@ pub struct KernelArgsAp {
 }
 
 /// Entry to rust for an AP
-pub unsafe extern "C" fn kstart_ap(args_ptr: *const KernelArgsAp) -> ! {
+pub unsafe extern "C" fn kstart_ap(args_ptr: *const KernelArgsAp) -> ! { unsafe {
     let cpu_id = {
         let args = &*args_ptr;
         let cpu_id = LogicalCpuId::new(args.cpu_id as u32);
@@ -315,4 +315,4 @@ pub unsafe extern "C" fn kstart_ap(args_ptr: *const KernelArgsAp) -> ! {
     }
 
     crate::kmain_ap(cpu_id);
-}
+}}

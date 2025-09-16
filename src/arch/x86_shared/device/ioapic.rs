@@ -237,7 +237,7 @@ pub fn src_overrides() -> &'static [Override] {
 }
 
 #[cfg(feature = "acpi")]
-pub unsafe fn handle_ioapic(mapper: &mut KernelMapper, madt_ioapic: &'static MadtIoApic) {
+pub unsafe fn handle_ioapic(mapper: &mut KernelMapper, madt_ioapic: &'static MadtIoApic) { unsafe {
     // map the I/O APIC registers
 
     let frame = Frame::containing(PhysicalAddress::new(madt_ioapic.address as usize));
@@ -271,9 +271,9 @@ pub unsafe fn handle_ioapic(mapper: &mut KernelMapper, madt_ioapic: &'static Mad
     );
 
     (*IOAPICS.get()).get_or_insert_with(Vec::new).push(ioapic);
-}
+}}
 #[cfg(feature = "acpi")]
-pub unsafe fn handle_src_override(src_override: &'static MadtIntSrcOverride) {
+pub unsafe fn handle_src_override(src_override: &'static MadtIntSrcOverride) { unsafe {
     let flags = src_override.flags;
 
     let polarity_raw = (flags & 0x0003) as u8;
@@ -305,10 +305,10 @@ pub unsafe fn handle_src_override(src_override: &'static MadtIntSrcOverride) {
     (*SRC_OVERRIDES.get())
         .get_or_insert_with(Vec::new)
         .push(over);
-}
+}}
 
 #[allow(dead_code)]
-pub unsafe fn init(active_table: &mut KernelMapper) {
+pub unsafe fn init(active_table: &mut KernelMapper) { unsafe {
     let bsp_apic_id = ApicId::new(u32::from(
         cpuid().get_feature_info().unwrap().initial_local_apic_id(),
     )); // TODO: remove unwraps
@@ -420,7 +420,7 @@ pub unsafe fn init(active_table: &mut KernelMapper) {
             m.execute("\\_PIC".into(), vec!(crate::acpi::aml::AmlValue::Integer(1)));
         }
     }*/
-}
+}}
 fn get_override(irq: u8) -> Option<&'static Override> {
     src_overrides().iter().find(|over| over.bus_irq == irq)
 }

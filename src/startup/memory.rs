@@ -101,7 +101,7 @@ impl MemoryMap {
         }
     }
 
-    fn iter(&self) -> Iter<MemoryEntry> {
+    fn iter(&self) -> Iter<'_, MemoryEntry> {
         return self.entries[0..self.size].iter();
     }
 
@@ -167,7 +167,7 @@ pub fn register_bootloader_areas(areas_base: usize, areas_size: usize) {
     }
 }
 
-unsafe fn add_memory(areas: &mut [MemoryArea], area_i: &mut usize, mut area: MemoryEntry) {
+unsafe fn add_memory(areas: &mut [MemoryArea], area_i: &mut usize, mut area: MemoryEntry) { unsafe {
     for reservation in (*MEMORY_MAP.get()).non_free() {
         if area.end > reservation.start && area.end <= reservation.end {
             log::info!(
@@ -270,9 +270,9 @@ unsafe fn add_memory(areas: &mut [MemoryArea], area_i: &mut usize, mut area: Mem
     areas[*area_i].base = PhysicalAddress::new(area.start);
     areas[*area_i].size = area.end - area.start;
     *area_i += 1;
-}
+}}
 
-unsafe fn map_memory<A: Arch>(areas: &[MemoryArea], mut bump_allocator: &mut BumpAllocator<A>) {
+unsafe fn map_memory<A: Arch>(areas: &[MemoryArea], mut bump_allocator: &mut BumpAllocator<A>) { unsafe {
     let mut mapper = PageMapper::<A, _>::create(TableKind::Kernel, &mut bump_allocator)
         .expect("failed to create Mapper");
 
@@ -387,9 +387,9 @@ unsafe fn map_memory<A: Arch>(areas: &[MemoryArea], mut bump_allocator: &mut Bum
 
     // Use the new table
     mapper.make_current();
-}
+}}
 
-pub unsafe fn init(low_limit: Option<usize>, high_limit: Option<usize>) {
+pub unsafe fn init(low_limit: Option<usize>, high_limit: Option<usize>) { unsafe {
     let physmem_limit = MemoryEntry {
         start: align_up(low_limit.unwrap_or(0)),
         end: align_down(high_limit.unwrap_or(usize::MAX)),
@@ -438,4 +438,4 @@ pub unsafe fn init(low_limit: Option<usize>, high_limit: Option<usize>) {
     );
 
     crate::memory::init_mm(bump_allocator);
-}
+}}

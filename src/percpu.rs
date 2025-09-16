@@ -131,7 +131,7 @@ impl PercpuBlock {
         }
     }
 }
-pub unsafe fn switch_arch_hook() {
+pub unsafe fn switch_arch_hook() { unsafe {
     let percpu = PercpuBlock::current();
 
     let cur_addrsp = percpu.current_addrsp.borrow();
@@ -166,7 +166,7 @@ pub unsafe fn switch_arch_hook() {
     } else {
         crate::paging::RmmA::set_table(rmm::TableKind::User, empty_cr3());
     }
-}
+}}
 impl PercpuBlock {
     pub fn init(cpu_id: LogicalCpuId) -> Self {
         Self {

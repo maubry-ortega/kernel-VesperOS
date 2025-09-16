@@ -234,7 +234,7 @@ pub unsafe fn deallocate_frame(frame: Frame) {
 }
 
 // Helper function for quickly mapping device memory
-pub unsafe fn map_device_memory(addr: PhysicalAddress, len: usize) -> VirtualAddress {
+pub unsafe fn map_device_memory(addr: PhysicalAddress, len: usize) -> VirtualAddress { unsafe {
     let mut mapper_lock = KernelMapper::lock();
     let mapper = mapper_lock
         .get_mut()
@@ -253,7 +253,7 @@ pub unsafe fn map_device_memory(addr: PhysicalAddress, len: usize) -> VirtualAdd
         flush.flush();
     }
     RmmA::phys_to_virt(addr)
-}
+}}
 
 const ORDER_COUNT: u32 = 11;
 const MAX_ORDER: u32 = ORDER_COUNT - 1;
@@ -1065,10 +1065,10 @@ impl FrameAllocator for TheFrameAllocator {
         let order = count.data().next_power_of_two().trailing_zeros();
         allocate_p2frame(order).map(|f| f.base())
     }
-    unsafe fn free(&mut self, address: PhysicalAddress, count: FrameCount) {
+    unsafe fn free(&mut self, address: PhysicalAddress, count: FrameCount) { unsafe {
         let order = count.data().next_power_of_two().trailing_zeros();
         deallocate_p2frame(Frame::containing(address), order)
-    }
+    }}
     unsafe fn usage(&self) -> FrameUsage {
         FrameUsage::new(
             FrameCount::new(used_frames()),

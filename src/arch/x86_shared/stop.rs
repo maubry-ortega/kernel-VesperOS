@@ -3,7 +3,7 @@ use crate::{context, scheme::acpi, time};
 
 use crate::syscall::io::{Io, Pio};
 
-pub unsafe fn kreset() -> ! {
+pub unsafe fn kreset() -> ! { unsafe {
     log::info!("kreset");
 
     // 8042 reset
@@ -15,7 +15,7 @@ pub unsafe fn kreset() -> ! {
     }
 
     emergency_reset();
-}
+}}
 
 #[cfg(target_arch = "x86")]
 pub unsafe fn emergency_reset() -> ! {
@@ -34,7 +34,7 @@ pub unsafe fn emergency_reset() -> ! {
 }
 
 #[cfg(target_arch = "x86_64")]
-pub unsafe fn emergency_reset() -> ! {
+pub unsafe fn emergency_reset() -> ! { unsafe {
     // Use triple fault to guarantee reset
     core::arch::asm!(
         "
@@ -47,7 +47,7 @@ pub unsafe fn emergency_reset() -> ! {
     ",
         options(noreturn)
     );
-}
+}}
 
 #[cfg(feature = "acpi")]
 fn userspace_acpi_shutdown() {
@@ -80,7 +80,7 @@ fn userspace_acpi_shutdown() {
     }
 }
 
-pub unsafe fn kstop() -> ! {
+pub unsafe fn kstop() -> ! { unsafe {
     log::info!("Running kstop()");
 
     #[cfg(feature = "acpi")]
@@ -106,4 +106,4 @@ pub unsafe fn kstop() -> ! {
     loop {
         core::arch::asm!("cli; hlt");
     }
-}
+}}

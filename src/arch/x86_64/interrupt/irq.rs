@@ -70,7 +70,7 @@ fn irq_method() -> IrqMethod {
 
 /// Notify the IRQ scheme that an IRQ has been registered. This should mask the IRQ until the
 /// scheme user unmasks it ("acknowledges" it).
-unsafe fn trigger(irq: u8) {
+unsafe fn trigger(irq: u8) { unsafe {
     match irq_method() {
         IrqMethod::Pic => {
             if irq < 16 {
@@ -80,11 +80,11 @@ unsafe fn trigger(irq: u8) {
         IrqMethod::Apic => ioapic_mask(irq),
     }
     irq_trigger(irq);
-}
+}}
 
 /// Unmask the IRQ. This is called from the IRQ scheme, which does this when a user process has
 /// processed the IRQ.
-pub unsafe fn acknowledge(irq: usize) {
+pub unsafe fn acknowledge(irq: usize) { unsafe {
     match irq_method() {
         IrqMethod::Pic => {
             if irq < 16 {
@@ -93,10 +93,10 @@ pub unsafe fn acknowledge(irq: usize) {
         }
         IrqMethod::Apic => ioapic_unmask(irq),
     }
-}
+}}
 
 /// Sends an end-of-interrupt, so that the interrupt controller can go on to the next one.
-pub unsafe fn eoi(irq: u8) {
+pub unsafe fn eoi(irq: u8) { unsafe {
     #[cfg(feature = "sys_stat")]
     PercpuBlock::current().stats.add_irq(irq);
 
@@ -108,9 +108,9 @@ pub unsafe fn eoi(irq: u8) {
         }
         IrqMethod::Apic => lapic_eoi(),
     }
-}
+}}
 
-unsafe fn pic_mask(irq: u8) {
+unsafe fn pic_mask(irq: u8) { unsafe {
     debug_assert!(irq < 16);
 
     if irq >= 8 {
@@ -118,13 +118,13 @@ unsafe fn pic_mask(irq: u8) {
     } else {
         pic::master().mask_set(irq);
     }
-}
+}}
 
-unsafe fn ioapic_mask(irq: u8) {
+unsafe fn ioapic_mask(irq: u8) { unsafe {
     ioapic::mask(irq);
-}
+}}
 
-unsafe fn pic_eoi(irq: u8) {
+unsafe fn pic_eoi(irq: u8) { unsafe {
     debug_assert!(irq < 16);
 
     if irq >= 8 {
@@ -133,13 +133,13 @@ unsafe fn pic_eoi(irq: u8) {
     } else {
         pic::master().ack();
     }
-}
+}}
 
-unsafe fn lapic_eoi() {
+unsafe fn lapic_eoi() { unsafe {
     local_apic::the_local_apic().eoi()
-}
+}}
 
-unsafe fn pic_unmask(irq: usize) {
+unsafe fn pic_unmask(irq: usize) { unsafe {
     debug_assert!(irq < 16);
 
     if irq >= 8 {
@@ -147,11 +147,11 @@ unsafe fn pic_unmask(irq: usize) {
     } else {
         pic::master().mask_clear(irq as u8);
     }
-}
+}}
 
-unsafe fn ioapic_unmask(irq: usize) {
+unsafe fn ioapic_unmask(irq: usize) { unsafe {
     ioapic::unmask(irq as u8);
-}
+}}
 
 interrupt_stack!(pit_stack, |_stack| {
     // Saves CPU time by not sending IRQ event irq_trigger(0);

@@ -29,17 +29,17 @@ static LOCAL_APIC: SyncUnsafeCell<LocalApic> = SyncUnsafeCell::new(LocalApic {
     address: 0,
     x2: false,
 });
-pub unsafe fn the_local_apic() -> &'static mut LocalApic {
+pub unsafe fn the_local_apic() -> &'static mut LocalApic { unsafe {
     &mut *LOCAL_APIC.get()
-}
+}}
 
-pub unsafe fn init(active_table: &mut KernelMapper) {
+pub unsafe fn init(active_table: &mut KernelMapper) { unsafe {
     the_local_apic().init(active_table);
-}
+}}
 
-pub unsafe fn init_ap() {
+pub unsafe fn init_ap() { unsafe {
     the_local_apic().init_ap();
-}
+}}
 
 /// Local APIC
 pub struct LocalApic {
@@ -48,7 +48,7 @@ pub struct LocalApic {
 }
 
 impl LocalApic {
-    unsafe fn init(&mut self, mapper: &mut KernelMapper) {
+    unsafe fn init(&mut self, mapper: &mut KernelMapper) { unsafe {
         let mapper = mapper
             .get_mut()
             .expect("expected KernelMapper not to be locked re-entrant while initializing LAPIC");
@@ -82,9 +82,9 @@ impl LocalApic {
         }
 
         self.init_ap();
-    }
+    }}
 
-    unsafe fn init_ap(&mut self) {
+    unsafe fn init_ap(&mut self) { unsafe {
         if self.x2 {
             wrmsr(IA32_APIC_BASE, rdmsr(IA32_APIC_BASE) | 1 << 10);
             wrmsr(IA32_X2APIC_SIVR, 0x100);
@@ -98,7 +98,7 @@ impl LocalApic {
             .misc_arch_info
             .apic_id_opt
             .set(Some(self.id()));
-    }
+    }}
 
     unsafe fn read(&self, reg: u32) -> u32 {
         unsafe { read_volatile((self.address + reg as usize) as *const u32) }
@@ -163,15 +163,15 @@ impl LocalApic {
         self.set_icr((u64::from(apic_id.get()) << shift) | (1 << 14) | (0b100 << 8));
     }
 
-    pub unsafe fn eoi(&mut self) {
+    pub unsafe fn eoi(&mut self) { unsafe {
         if self.x2 {
             wrmsr(IA32_X2APIC_EOI, 0);
         } else {
             self.write(0xB0, 0);
         }
-    }
+    }}
     /// Reads the Error Status Register.
-    pub unsafe fn esr(&mut self) -> u32 {
+    pub unsafe fn esr(&mut self) -> u32 { unsafe {
         if self.x2 {
             // update the ESR to the current state of the local apic.
             wrmsr(IA32_X2APIC_ESR, 0);
@@ -181,74 +181,74 @@ impl LocalApic {
             self.write(0x280, 0);
             self.read(0x280)
         }
-    }
-    pub unsafe fn lvt_timer(&mut self) -> u32 {
+    }}
+    pub unsafe fn lvt_timer(&mut self) -> u32 { unsafe {
         if self.x2 {
             rdmsr(IA32_X2APIC_LVT_TIMER) as u32
         } else {
             self.read(0x320)
         }
-    }
-    pub unsafe fn set_lvt_timer(&mut self, value: u32) {
+    }}
+    pub unsafe fn set_lvt_timer(&mut self, value: u32) { unsafe {
         if self.x2 {
             wrmsr(IA32_X2APIC_LVT_TIMER, u64::from(value));
         } else {
             self.write(0x320, value);
         }
-    }
-    pub unsafe fn init_count(&mut self) -> u32 {
+    }}
+    pub unsafe fn init_count(&mut self) -> u32 { unsafe {
         if self.x2 {
             rdmsr(IA32_X2APIC_INIT_COUNT) as u32
         } else {
             self.read(0x380)
         }
-    }
-    pub unsafe fn set_init_count(&mut self, initial_count: u32) {
+    }}
+    pub unsafe fn set_init_count(&mut self, initial_count: u32) { unsafe {
         if self.x2 {
             wrmsr(IA32_X2APIC_INIT_COUNT, u64::from(initial_count));
         } else {
             self.write(0x380, initial_count);
         }
-    }
-    pub unsafe fn cur_count(&mut self) -> u32 {
+    }}
+    pub unsafe fn cur_count(&mut self) -> u32 { unsafe {
         if self.x2 {
             rdmsr(IA32_X2APIC_CUR_COUNT) as u32
         } else {
             self.read(0x390)
         }
-    }
-    pub unsafe fn div_conf(&mut self) -> u32 {
+    }}
+    pub unsafe fn div_conf(&mut self) -> u32 { unsafe {
         if self.x2 {
             rdmsr(IA32_X2APIC_DIV_CONF) as u32
         } else {
             self.read(0x3E0)
         }
-    }
-    pub unsafe fn set_div_conf(&mut self, div_conf: u32) {
+    }}
+    pub unsafe fn set_div_conf(&mut self, div_conf: u32) { unsafe {
         if self.x2 {
             wrmsr(IA32_X2APIC_DIV_CONF, u64::from(div_conf));
         } else {
             self.write(0x3E0, div_conf);
         }
-    }
-    pub unsafe fn lvt_error(&mut self) -> u32 {
+    }}
+    pub unsafe fn lvt_error(&mut self) -> u32 { unsafe {
         if self.x2 {
             rdmsr(IA32_X2APIC_LVT_ERROR) as u32
         } else {
             self.read(0x370)
         }
-    }
-    pub unsafe fn set_lvt_error(&mut self, lvt_error: u32) {
+    }}
+    pub unsafe fn set_lvt_error(&mut self, lvt_error: u32) { unsafe {
         if self.x2 {
             wrmsr(IA32_X2APIC_LVT_ERROR, u64::from(lvt_error));
         } else {
             self.write(0x370, lvt_error);
         }
-    }
-    unsafe fn setup_error_int(&mut self) {
+    }}
+    unsafe fn setup_error_int(&mut self) { unsafe {
         let vector = 49u32;
         self.set_lvt_error(vector);
-    }
+    }}
 }
 
 #[repr(u8)]

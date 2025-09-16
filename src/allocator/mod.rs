@@ -16,7 +16,7 @@ mod linked_list;
 #[cfg(feature = "slab")]
 mod slab;
 
-unsafe fn map_heap(mapper: &mut KernelMapper, offset: usize, size: usize) {
+unsafe fn map_heap(mapper: &mut KernelMapper, offset: usize, size: usize) { unsafe {
     let mapper = mapper
         .get_mut()
         .expect("failed to obtain exclusive access to KernelMapper while extending heap");
@@ -37,7 +37,7 @@ unsafe fn map_heap(mapper: &mut KernelMapper, offset: usize, size: usize) {
     }
 
     flush_all.flush();
-}
+}}
 
 pub unsafe fn init() {
     let offset = crate::KERNEL_HEAP_OFFSET;

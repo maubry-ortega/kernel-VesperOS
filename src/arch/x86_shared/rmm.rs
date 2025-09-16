@@ -1,6 +1,6 @@
 use rmm::{Arch, PageFlags, VirtualAddress};
 
-pub unsafe fn page_flags<A: Arch>(virt: VirtualAddress) -> PageFlags<A> {
+pub unsafe fn page_flags<A: Arch>(virt: VirtualAddress) -> PageFlags<A> { unsafe {
     use crate::kernel_executable_offsets::*;
     let virt_addr = virt.data();
 
@@ -15,4 +15,4 @@ pub unsafe fn page_flags<A: Arch>(virt: VirtualAddress) -> PageFlags<A> {
         PageFlags::new().write(true)
     })
     .global(cfg!(all(target_arch = "x86_64", not(feature = "pti"))))
-}
+}}

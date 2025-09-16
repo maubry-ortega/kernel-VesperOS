@@ -141,14 +141,14 @@ const _: () = {
     }
 };
 
-pub unsafe fn pcr() -> *mut ProcessorControlRegion {
+pub unsafe fn pcr() -> *mut ProcessorControlRegion { unsafe {
     // Primitive benchmarking of RDFSBASE and RDGSBASE in userspace, appears to indicate that
     // obtaining FSBASE/GSBASE using mov gs:[gs_self_ref] is faster than using the (probably
     // microcoded) instructions.
     let mut ret: *mut ProcessorControlRegion;
     core::arch::asm!("mov {}, gs:[{}]", out(reg) ret, const(core::mem::offset_of!(ProcessorControlRegion, self_ref)));
     ret
-}
+}}
 
 #[cfg(feature = "pti")]
 pub unsafe fn set_tss_stack(pcr: *mut ProcessorControlRegion, stack: usize) {
@@ -159,23 +159,23 @@ pub unsafe fn set_tss_stack(pcr: *mut ProcessorControlRegion, stack: usize) {
 }
 
 #[cfg(not(feature = "pti"))]
-pub unsafe fn set_tss_stack(pcr: *mut ProcessorControlRegion, stack: usize) {
+pub unsafe fn set_tss_stack(pcr: *mut ProcessorControlRegion, stack: usize) { unsafe {
     // TODO: If this increases performance, read gs:[offset] directly
     core::ptr::addr_of_mut!((*pcr).tss.rsp[0]).write_unaligned(stack as u64);
-}
+}}
 
-pub unsafe fn set_userspace_io_allowed(pcr: *mut ProcessorControlRegion, allowed: bool) {
+pub unsafe fn set_userspace_io_allowed(pcr: *mut ProcessorControlRegion, allowed: bool) { unsafe {
     let offset = if allowed {
         u16::try_from(size_of::<TaskStateSegment>()).unwrap()
     } else {
         0xFFFF
     };
     core::ptr::addr_of_mut!((*pcr).tss.iomap_base).write(offset);
-}
+}}
 
 // Initialize startup GDT
 #[cold]
-pub unsafe fn init() {
+pub unsafe fn init() { unsafe {
     // Before the kernel can remap itself, it needs to switch to a GDT it controls. Start with a
     // minimal kernel-only GDT.
     dtables::lgdt(&DescriptorTablePointer {
@@ -184,9 +184,9 @@ pub unsafe fn init() {
     });
 
     load_segments();
-}
+}}
 #[cold]
-unsafe fn load_segments() {
+unsafe fn load_segments() { unsafe {
     segmentation::load_cs(SegmentSelector::new(GDT_KERNEL_CODE as u16, Ring::Ring0));
     segmentation::load_ss(SegmentSelector::new(GDT_KERNEL_DATA as u16, Ring::Ring0));
 
@@ -197,11 +197,11 @@ unsafe fn load_segments() {
     // What happens when GS is loaded with a NULL selector, is undefined on Intel CPUs. However,
     // GSBASE is set later, and percpu is not used until gdt::init_paging().
     segmentation::load_gs(SegmentSelector::from_raw(0));
-}
+}}
 
 /// Initialize GDT and PCR.
 #[cold]
-pub unsafe fn init_paging(stack_offset: usize, cpu_id: LogicalCpuId) {
+pub unsafe fn init_paging(stack_offset: usize, cpu_id: LogicalCpuId) { unsafe {
     let alloc_order = size_of::<ProcessorControlRegion>()
         .div_ceil(PAGE_SIZE)
         .next_power_of_two()
@@ -263,7 +263,7 @@ pub unsafe fn init_paging(stack_offset: usize, cpu_id: LogicalCpuId) {
     pcr.percpu = PercpuBlock::init(cpu_id);
 
     crate::percpu::init_tlb_shootdown(cpu_id, &mut pcr.percpu);
-}
+}}
 #[derive(Copy, Clone, Debug)]
 #[repr(C, packed)]
 pub struct GdtEntry {

@@ -18,9 +18,9 @@ unsafe impl<T: ?Sized> Send for Unique<T> {}
 unsafe impl<T: ?Sized> Sync for Unique<T> {}
 
 impl<T: ?Sized> Unique<T> {
-    pub unsafe fn new_unchecked(ptr: *mut T) -> Self {
+    pub unsafe fn new_unchecked(ptr: *mut T) -> Self { unsafe {
         Self(NonNull::new_unchecked(ptr))
-    }
+    }}
     pub fn as_ptr(self) -> *mut T {
         self.0.as_ptr()
     }

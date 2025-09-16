@@ -26,7 +26,7 @@ pub mod colors {
 
 /// Constantes de color para VGA
 pub mod vga_colors {
-    use crate::vesper_colors::colors::*;
+    
 
     /// Color de fondo principal (Negro Profundo)
     pub const BACKGROUND: u8 = 0x00; // Negro

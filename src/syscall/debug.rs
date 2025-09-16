@@ -37,9 +37,9 @@ fn debug_buf(ptr: usize, len: usize) -> Result<Vec<u8>> {
         Ok(buf)
     })
 }
-unsafe fn read_struct<T>(ptr: usize) -> Result<T> {
+unsafe fn read_struct<T>(ptr: usize) -> Result<T> { unsafe {
     UserSlice::ro(ptr, mem::size_of::<T>()).and_then(|slice| slice.read_exact::<T>())
-}
+}}
 
 //TODO: calling format_call with arguments from another process space will not work
 pub fn format_call(a: usize, b: usize, c: usize, d: usize, e: usize, f: usize) -> String {

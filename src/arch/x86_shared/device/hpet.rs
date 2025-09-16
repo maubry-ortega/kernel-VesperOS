@@ -22,7 +22,7 @@ pub(crate) const T0_COMPARATOR_OFFSET: usize = 0x108;
 
 const PER_INT_CAP: u64 = 0x10;
 
-pub unsafe fn init(hpet: &mut Hpet) -> bool {
+pub unsafe fn init(hpet: &mut Hpet) -> bool { unsafe {
     println!("HPET @ {:#x}", { hpet.base_address.address });
     debug_caps(hpet);
 
@@ -71,9 +71,9 @@ pub unsafe fn init(hpet: &mut Hpet) -> bool {
     debug_config(hpet);
 
     true
-}
+}}
 
-unsafe fn debug_caps(hpet: &mut Hpet) {
+unsafe fn debug_caps(hpet: &mut Hpet) { unsafe {
     let capability = hpet.read_u64(CAPABILITY_OFFSET);
     println!("  caps: {:#x}", capability);
     println!(
@@ -99,9 +99,9 @@ unsafe fn debug_caps(hpet: &mut Hpet) {
         "  T0 interrupt routing: {:#x}",
         (t0_capabilities >> 32) as u32
     );
-}
+}}
 
-unsafe fn debug_config(hpet: &mut Hpet) {
+unsafe fn debug_config(hpet: &mut Hpet) { unsafe {
     let config_word = hpet.read_u64(GENERAL_CONFIG_OFFSET);
     println!("  config: {:#x}", config_word);
 
@@ -116,4 +116,4 @@ unsafe fn debug_config(hpet: &mut Hpet) {
 
     let t0_comparator = hpet.read_u64(T0_COMPARATOR_OFFSET);
     println!("  T0 comparator: {:#x}", t0_comparator);
-}
+}}

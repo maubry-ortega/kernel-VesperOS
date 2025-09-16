@@ -109,7 +109,7 @@ pub fn tick() {
 ///
 /// # Safety
 /// This function involves unsafe operations such as resetting state and releasing locks.
-pub unsafe extern "C" fn switch_finish_hook() {
+pub unsafe extern "C" fn switch_finish_hook() { unsafe {
     if let Some(switch_result) = PercpuBlock::current().switch_internals.switch_result.take() {
         drop(switch_result);
     } else {
@@ -118,7 +118,7 @@ pub unsafe extern "C" fn switch_finish_hook() {
     }
     arch::CONTEXT_SWITCH_LOCK.store(false, Ordering::SeqCst);
     crate::percpu::switch_arch_hook();
-}
+}}
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum SwitchResult {

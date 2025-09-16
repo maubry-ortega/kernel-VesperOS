@@ -89,11 +89,11 @@ macro_rules! use_default_irqs(
     }}
 );
 
-pub unsafe fn init() {
+pub unsafe fn init() { unsafe {
     let idt = &mut *INIT_IDT.get();
     set_exceptions(idt);
     dtables::lidt(&DescriptorTablePointer::new(&idt));
-}
+}}
 
 fn set_exceptions(idt: &mut [IdtEntry]) {
     // Set up exceptions
@@ -138,7 +138,7 @@ const fn new_idt_reservations() -> [AtomicU32; 8] {
 }
 
 /// Initialize the IDT for a processor
-pub unsafe fn init_paging_post_heap(cpu_id: LogicalCpuId) {
+pub unsafe fn init_paging_post_heap(cpu_id: LogicalCpuId) { unsafe {
     let mut idts_guard = IDTS.write();
     let idts_btree = idts_guard.get_or_insert_with(HashMap::new);
 
@@ -150,16 +150,16 @@ pub unsafe fn init_paging_post_heap(cpu_id: LogicalCpuId) {
             .or_insert_with(|| Box::leak(Box::new(Idt::new())));
         init_generic(cpu_id, idt);
     }
-}
+}}
 
 /// Initializes a fully functional IDT for use before it be moved into the map. This is ONLY called
 /// on the BSP, since the kernel heap is ready for the APs.
-pub unsafe fn init_paging_bsp() {
+pub unsafe fn init_paging_bsp() { unsafe {
     init_generic(LogicalCpuId::BSP, &mut *INIT_BSP_IDT.get());
-}
+}}
 
 /// Initializes an IDT for any type of processor.
-pub unsafe fn init_generic(cpu_id: LogicalCpuId, idt: &mut Idt) {
+pub unsafe fn init_generic(cpu_id: LogicalCpuId, idt: &mut Idt) { unsafe {
     let (current_idt, current_reservations) = (&mut idt.entries, &mut idt.reservations);
 
     let idtr: DescriptorTablePointer<X86IdtEntry> = DescriptorTablePointer {
@@ -276,7 +276,7 @@ pub unsafe fn init_generic(cpu_id: LogicalCpuId, idt: &mut Idt) {
     crate::profiling::maybe_setup_timer(idt, cpu_id);
 
     dtables::lidt(&idtr);
-}
+}}
 
 bitflags! {
     pub struct IdtFlags: u8 {
